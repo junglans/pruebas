@@ -1,0 +1,214 @@
+<custom__type__definition>
+  <version>5.2.0.0</version>
+  <typeName class="org.mule.common.metadata.DefaultMetaDataKey">
+    <id>outXml</id>
+    <displayName>outXml</displayName>
+    <category>DEFAULT</category>
+    <metaDataKeyPropertiesManager>
+      <properties>
+        <org.mule.common.metadata.key.property.dsql.DsqlFromMetaDataKeyProperty/>
+      </properties>
+    </metaDataKeyPropertiesManager>
+  </typeName>
+  <metadataModel class="org.mule.common.metadata.DefaultXmlMetaDataModel">
+    <dataType>XML</dataType>
+    <metaDataModelPropertiesManager>
+      <properties>
+        <org.mule.common.metadata.property.TextBasedExampleMetaDataModelProperty/>
+        <org.mule.common.metadata.property.xml.SchemaTypeMetaDataProperty/>
+        <org.mule.tooling.metadata.properties.DefinitionEditorModeType>
+          <mode>SCHEMA</mode>
+          <path>C:\Desarrollo\Clientes\AREAS\mambo-forms-cs\src\main\api\schemas\families.xsd</path>
+          <rootElement>response</rootElement>
+        </org.mule.tooling.metadata.properties.DefinitionEditorModeType>
+      </properties>
+    </metaDataModelPropertiesManager>
+    <fields>
+      <org.mule.common.metadata.DefaultMetaDataField>
+        <name>body</name>
+        <model class="org.mule.common.metadata.DefaultXmlMetaDataModel">
+          <dataType>XML</dataType>
+          <metaDataModelPropertiesManager>
+            <properties/>
+          </metaDataModelPropertiesManager>
+          <fields>
+            <org.mule.common.metadata.DefaultMetaDataField>
+              <name>content</name>
+              <model class="org.mule.common.metadata.DefaultXmlMetaDataModel">
+                <dataType>XML</dataType>
+                <metaDataModelPropertiesManager>
+                  <properties/>
+                </metaDataModelPropertiesManager>
+                <fields>
+                  <org.mule.common.metadata.DefaultMetaDataField>
+                    <name>families</name>
+                    <model class="org.mule.common.metadata.DefaultXmlMetaDataModel">
+                      <dataType>XML</dataType>
+                      <metaDataModelPropertiesManager>
+                        <properties/>
+                      </metaDataModelPropertiesManager>
+                      <fields>
+                        <org.mule.common.metadata.DefaultMetaDataField>
+                          <name>family</name>
+                          <model class="org.mule.common.metadata.DefaultListMetaDataModel">
+                            <dataType>LIST</dataType>
+                            <metaDataModelPropertiesManager>
+                              <properties>
+                                <org.mule.common.metadata.property.xml.UnboundMetaDataProperty>
+                                  <maxOccurs>2147483647</maxOccurs>
+                                  <minOccurs>0</minOccurs>
+                                </org.mule.common.metadata.property.xml.UnboundMetaDataProperty>
+                              </properties>
+                            </metaDataModelPropertiesManager>
+                            <model class="org.mule.common.metadata.DefaultXmlMetaDataModel">
+                              <dataType>XML</dataType>
+                              <metaDataModelPropertiesManager>
+                                <properties/>
+                              </metaDataModelPropertiesManager>
+                              <fields>
+                                <org.mule.common.metadata.DefaultMetaDataField>
+                                  <name>familyId</name>
+                                  <model class="org.mule.common.metadata.DefaultSimpleMetaDataModel">
+                                    <dataType>STRING</dataType>
+                                    <metaDataModelPropertiesManager>
+                                      <properties>
+                                        <org.mule.common.metadata.property.xml.SchemaTypeMetaDataProperty>
+                                          <typeQName>
+                                            <namespaceURI>http://www.w3.org/2001/XMLSchema</namespaceURI>
+                                            <localPart>string</localPart>
+                                            <prefix></prefix>
+                                          </typeQName>
+                                        </org.mule.common.metadata.property.xml.SchemaTypeMetaDataProperty>
+                                      </properties>
+                                    </metaDataModelPropertiesManager>
+                                  </model>
+                                  <accessType>READ_WRITE</accessType>
+                                  <metaDataFieldPropertyManager>
+                                    <properties>
+                                      <org.mule.common.metadata.property.QNameMetaDataProperty>
+                                        <name>
+                                          <namespaceURI></namespaceURI>
+                                          <localPart>familyId</localPart>
+                                          <prefix></prefix>
+                                        </name>
+                                      </org.mule.common.metadata.property.QNameMetaDataProperty>
+                                    </properties>
+                                  </metaDataFieldPropertyManager>
+                                </org.mule.common.metadata.DefaultMetaDataField>
+                                <org.mule.common.metadata.DefaultMetaDataField>
+                                  <name>familyName</name>
+                                  <model class="org.mule.common.metadata.DefaultSimpleMetaDataModel">
+                                    <dataType>STRING</dataType>
+                                    <metaDataModelPropertiesManager>
+                                      <properties>
+                                        <org.mule.common.metadata.property.xml.SchemaTypeMetaDataProperty>
+                                          <typeQName reference="../../../../../../org.mule.common.metadata.DefaultMetaDataField/model/metaDataModelPropertiesManager/properties/org.mule.common.metadata.property.xml.SchemaTypeMetaDataProperty/typeQName"/>
+                                        </org.mule.common.metadata.property.xml.SchemaTypeMetaDataProperty>
+                                      </properties>
+                                    </metaDataModelPropertiesManager>
+                                  </model>
+                                  <accessType>READ_WRITE</accessType>
+                                  <metaDataFieldPropertyManager>
+                                    <properties>
+                                      <org.mule.common.metadata.property.QNameMetaDataProperty>
+                                        <name>
+                                          <namespaceURI></namespaceURI>
+                                          <localPart>familyName</localPart>
+                                          <prefix></prefix>
+                                        </name>
+                                      </org.mule.common.metadata.property.QNameMetaDataProperty>
+                                    </properties>
+                                  </metaDataFieldPropertyManager>
+                                </org.mule.common.metadata.DefaultMetaDataField>
+                              </fields>
+                              <rootElement>
+                                <namespaceURI></namespaceURI>
+                                <localPart>response</localPart>
+                                <prefix></prefix>
+                              </rootElement>
+                              <schemas class="org.mule.common.metadata.UrlBasedSchemaProvider">
+                                <schemas>
+                                  <url>file:/C:/Desarrollo/Clientes/AREAS/mambo-forms-cs/src/main/api/schemas/families.xsd</url>
+                                </schemas>
+                              </schemas>
+                              <namespaceManager>
+                                <namespacePrefix class="tree-map"/>
+                              </namespaceManager>
+                            </model>
+                            <isArray>false</isArray>
+                          </model>
+                          <accessType>READ_WRITE</accessType>
+                          <metaDataFieldPropertyManager>
+                            <properties>
+                              <org.mule.common.metadata.property.QNameMetaDataProperty>
+                                <name>
+                                  <namespaceURI></namespaceURI>
+                                  <localPart>family</localPart>
+                                  <prefix></prefix>
+                                </name>
+                              </org.mule.common.metadata.property.QNameMetaDataProperty>
+                            </properties>
+                          </metaDataFieldPropertyManager>
+                        </org.mule.common.metadata.DefaultMetaDataField>
+                      </fields>
+                      <rootElement reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/model/rootElement"/>
+                      <schemas class="org.mule.common.metadata.UrlBasedSchemaProvider" reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/model/schemas"/>
+                      <namespaceManager reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/model/namespaceManager"/>
+                    </model>
+                    <accessType>READ_WRITE</accessType>
+                    <metaDataFieldPropertyManager>
+                      <properties>
+                        <org.mule.common.metadata.property.QNameMetaDataProperty>
+                          <name>
+                            <namespaceURI></namespaceURI>
+                            <localPart>families</localPart>
+                            <prefix></prefix>
+                          </name>
+                        </org.mule.common.metadata.property.QNameMetaDataProperty>
+                      </properties>
+                    </metaDataFieldPropertyManager>
+                  </org.mule.common.metadata.DefaultMetaDataField>
+                </fields>
+                <rootElement reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/model/rootElement"/>
+                <schemas class="org.mule.common.metadata.UrlBasedSchemaProvider" reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/model/schemas"/>
+                <namespaceManager reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/model/namespaceManager"/>
+              </model>
+              <accessType>READ_WRITE</accessType>
+              <metaDataFieldPropertyManager>
+                <properties>
+                  <org.mule.common.metadata.property.QNameMetaDataProperty>
+                    <name>
+                      <namespaceURI></namespaceURI>
+                      <localPart>content</localPart>
+                      <prefix></prefix>
+                    </name>
+                  </org.mule.common.metadata.property.QNameMetaDataProperty>
+                </properties>
+              </metaDataFieldPropertyManager>
+            </org.mule.common.metadata.DefaultMetaDataField>
+          </fields>
+          <rootElement reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/model/rootElement"/>
+          <schemas class="org.mule.common.metadata.UrlBasedSchemaProvider" reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/model/schemas"/>
+          <namespaceManager reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/model/namespaceManager"/>
+        </model>
+        <accessType>READ_WRITE</accessType>
+        <metaDataFieldPropertyManager>
+          <properties>
+            <org.mule.common.metadata.property.QNameMetaDataProperty>
+              <name>
+                <namespaceURI></namespaceURI>
+                <localPart>body</localPart>
+                <prefix></prefix>
+              </name>
+            </org.mule.common.metadata.property.QNameMetaDataProperty>
+          </properties>
+        </metaDataFieldPropertyManager>
+      </org.mule.common.metadata.DefaultMetaDataField>
+    </fields>
+    <rootElement reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/model/rootElement"/>
+    <schemas class="org.mule.common.metadata.UrlBasedSchemaProvider">
+      <schemas reference="../../fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/model/schemas/schemas"/>
+    </schemas>
+    <namespaceManager reference="../fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/fields/org.mule.common.metadata.DefaultMetaDataField/model/model/namespaceManager"/>
+  </metadataModel>
+</custom__type__definition>

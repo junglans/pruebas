@@ -3,8 +3,9 @@ package com.pruebas.ftp;
 public class Borrar {
 
 	private String attr1;
+	private String attr2;
 	/**
-	 * Se añade el constructor por defecto.
+	 * Se aï¿½ade el constructor por defecto.
 	 */
 	public Borrar() {}
 	public String getAttr1() {
@@ -13,5 +14,12 @@ public class Borrar {
 	public void setAttr1(String attr1) {
 		this.attr1 = attr1;
 	}
+	public String getAttr2() {
+		return attr2;
+	}
+	public void setAttr2(String attr2) {
+		this.attr2 = attr2;
+	}
+	
 	
 }

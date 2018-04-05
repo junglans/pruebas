@@ -1,6 +1,7 @@
 package com.pruebas.ftp;
 
 public class Prueba {
+
 	private String attr1;
 	public Prueba(){}
 	public String getAttr1() {

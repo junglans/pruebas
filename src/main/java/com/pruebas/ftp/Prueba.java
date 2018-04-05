@@ -3,6 +3,7 @@ package com.pruebas.ftp;
 public class Prueba {
 
 	private String attr1;
+	private String attr2;
 	public Prueba(){}
 	public String getAttr1() {
 		return attr1;
@@ -10,5 +11,12 @@ public class Prueba {
 	public void setAttr1(String attr1) {
 		this.attr1 = attr1;
 	}
+	public String getAttr2() {
+		return attr2;
+	}
+	public void setAttr2(String attr2) {
+		this.attr2 = attr2;
+	}
+	
 	
 }

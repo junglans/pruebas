@@ -20,7 +20,6 @@ public class PruebaMerge {
 	public void setAttr1(String attr1) {
 		this.attr1 = attr1;
 	}
-
 	public String getAttr2() {
 		return attr2;
 	}
@@ -39,3 +38,4 @@ public class PruebaMerge {
 	
 	
 }
+

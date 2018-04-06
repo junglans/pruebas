@@ -6,7 +6,7 @@ public class PruebaMerge {
 	private String attr2;
 	private String attr3;
 	public PruebaMerge() {}
- 
+
 	public PruebaMerge(String attr1, String attr2, String attr3) {
 		super();
 		this.attr1 = attr1;

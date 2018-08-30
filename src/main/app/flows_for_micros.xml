@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+    <sub-flow name="getCountryFromFileName" doc:description="Expects an input parameter in the form of a flowVar named &quot;fileName&quot; returns the country information into  a flowVar named &quot;countryInfo&quot;">
+           <choice doc:name="fileType?">
+            <when expression="#[flowVars.fileName.startsWith(&quot;S2_SLSEXP&quot;)]">
+                <dw:transform-message doc:name="Build Regex for SLS">
+                    <dw:set-variable variableName="regex"><![CDATA[%dw 1.0
+%output application/java
+%var regex = p('sls.filename.regex')
+---
+regex replace 'countries' with p('country.list')]]></dw:set-variable>
+                </dw:transform-message>
+            </when>
+            <when expression="#[flowVars.fileName.startsWith(&quot;S2_CMEXP&quot;)]">
+                <dw:transform-message doc:name="Build Regex for CM">
+                    <dw:set-variable variableName="regex"><![CDATA[%dw 1.0
+%output application/java
+%var regex = p('cm.filename.regex')
+---
+regex replace 'countries' with p('country.list')]]></dw:set-variable>
+                </dw:transform-message>
+            </when>
+            <when expression="#[flowVars.fileName.startsWith(&quot;S2_INVEXP&quot;)]">
+                <dw:transform-message doc:name="Build Regex for INV">
+                    <dw:set-variable variableName="regex"><![CDATA[%dw 1.0
+%output application/java
+%var regex = p('inv.filename.regex')
+---
+regex replace 'countries' with p('country.list')]]></dw:set-variable>
+                </dw:transform-message>
+            </when>
+            <otherwise>
+                <scripting:component doc:name="Throw not recognized filename">
+                    <scripting:script engine="Groovy"><![CDATA[throw new java.lang.Exception("Not recognized filename:" + flowVars.fileName);]]></scripting:script>
+                </scripting:component>
+            </otherwise>
+        </choice>
+        <choice doc:name="Choice">
+            <when expression="#[validator.matchesRegex(flowVars.fileName,flowVars.regex,false)]">
+                <set-variable variableName="country" value="#[flowVars.fileName.split(&quot;_&quot;)[3]]" doc:name="country" doc:description="Receives the file name stored in a flowVar named &quot;fileName&quot;, returns a map with all the properties related to the country found. If cannot recognize the file type throws an exception."/>
+            </when>
+            <otherwise>
+                <set-variable variableName="country" value="#[dw(&quot;p('default.country')&quot;)]" doc:name="country"/>
+            </otherwise>
+        </choice>
+        <dw:transform-message doc:name="Get Country Info">
+            <dw:set-variable variableName="countryInfo"><![CDATA[%dw 1.0
+%output application/java
+%var id = flowVars.country
+---
+{
+	code: p( id ++ ".code"),
+	name: p( id ++ ".countryName"),
+	emailList: p( id ++ ".emailToList"),
+	emailSubject: p( id ++ ".emailSubject"),
+	processedPath: p( id ++ ".processedPath"),
+	errorPath: p( id ++ ".errorPath")
+}]]></dw:set-variable>
+        </dw:transform-message>
+    </sub-flow>
+</mule>

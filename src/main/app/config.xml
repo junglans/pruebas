@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp"
+	xmlns:mulerequester="http://www.mulesoft.org/schema/mule/mulerequester"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:secure-property-placeholder="http://www.mulesoft.org/schema/mule/secure-property-placeholder" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
+http://www.mulesoft.org/schema/mule/mulerequester http://www.mulesoft.org/schema/mule/mulerequester/current/mule-mulerequester.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-property-placeholder http://www.mulesoft.org/schema/mule/secure-property-placeholder/current/mule-secure-property-placeholder.xsd">
+
+    <sftp:connector name="SFTP" validateConnections="true" doc:name="SFTP" duplicateHandling="overwrite" preferredAuthenticationMethods="publickey,password,keyboard-interactive" keepFileOnError="true"   autoDelete="false" tempDirInbound="processing">
+
+    </sftp:connector>
+
+	<configuration doc:name="Configuration">
+       <expression-language>
+       <import class="com.fasterxml.jackson.core.io.JsonStringEncoder" />
+		<global-functions>
+    		def split(line, character, maxfields) {
+    			String[] lineValues = line.split(character);
+    			String[] record = new String[maxfields];
+    			java.util.Arrays.fill(record,"");
+    			System.arraycopy(lineValues, 0, record, 0, lineValues.length);
+    			return record;
+    		}
+    		def quoteJSONString(s) {
+				return String.valueOf(JsonStringEncoder.getInstance().quoteAsString(s))
+			}
+			
+			def getMap(headers, row) {
+				return com.pruebas.util.MapRow.mapRow(headers, row);
+			}
+			def getTickets(tickets, headers, row) {
+				com.pruebas.util.TicketUtils.loadTicket(tickets, headers, row);
+				return "";
+			}
+   		</global-functions>
+	</expression-language>
+</configuration>
+ 
+</mule>

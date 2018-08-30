@@ -1,18 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Configuration status="INFO" name="cloudhub" packages="com.mulesoft.ch.logging.appender">
-
-	<!--These are some of the loggers you can enable. 
-	    There are several more you can find in the documentation. 
-        Besides this log4j configuration, you can also use Java VM environment variables
-        to enable other logs like network (-Djavax.net.debug=ssl or all) and 
-        Garbage Collector (-XX:+PrintGC). These will be append to the console, so you will 
-        see them in the mule_ee.log file. -->
-
-
     <Appenders>
-        <RollingFile name="file" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}pruebas.log" 
-                 filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}pruebas-%i.log">
-            <PatternLayout pattern="%d [%t] %-5p %c - %m%n" />
+        <RollingFile name="file" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}pos-batch.log" 
+                 filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}pos-batch-%i.log">
+            <PatternLayout pattern="%d{ISO8601}{UTC} %p %c %m%n" />
             <SizeBasedTriggeringPolicy size="10 MB" />
             <DefaultRolloverStrategy max="10"/>
         </RollingFile>
@@ -42,18 +33,18 @@
             <PatternLayout pattern="%d{ISO8601}{UTC} %p %c %m%n" />
         </Socket>
     </Appenders>
+    
     <Loggers>
-    	
-    	   	<!-- Areas Logger -->
+        <!-- Areas Logger -->
         <AsyncLogger name="com.areas" level="INFO" >
             <AppenderRef ref="LOGSTASH" />
         </AsyncLogger>
-    	
-		<!-- Http Logger shows wire traffic on DEBUG -->
-		<AsyncLogger name="org.mule.module.http.internal.HttpMessageLogger" level="WARN"/>
-	
-		<!-- JDBC Logger shows queries and parameters values on DEBUG -->
-		<AsyncLogger name="com.mulesoft.mule.transport.jdbc" level="WARN"/>
+        
+        <!-- Http Logger shows wire traffic on DEBUG -->
+        <AsyncLogger name="org.mule.module.http.internal.HttpMessageLogger" level="WARN"/>
+    
+        <!-- JDBC Logger shows queries and parameters values on DEBUG -->
+        <AsyncLogger name="com.mulesoft.mule.transport.jdbc" level="WARN"/>
     
         <!-- CXF is used heavily by Mule for web services -->
         <AsyncLogger name="org.apache.cxf" level="WARN"/>
@@ -71,6 +62,12 @@
         <!-- Reduce DM verbosity -->
         <AsyncLogger name="org.jetel" level="WARN"/>
         <AsyncLogger name="Tracking" level="WARN"/>
+        
+        <!-- Cloudhub recommended Loggers -->
+        <AsyncLogger name="com.gigaspaces" level="ERROR"/>
+        <AsyncLogger name="com.j_spaces" level="ERROR"/>
+        <AsyncLogger name="com.sun.jini" level="ERROR"/>
+        <AsyncLogger name="net.jini" level="ERROR"/>
         
         <AsyncRoot level="INFO">
             <AppenderRef ref="file" />

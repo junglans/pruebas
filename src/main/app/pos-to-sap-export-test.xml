@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:objectstore="http://www.mulesoft.org/schema/mule/objectstore"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/objectstore http://www.mulesoft.org/schema/mule/objectstore/current/mule-objectstore.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+    <sftp:connector name="SFTP1" validateConnections="true" duplicateHandling="overwrite" keepFileOnError="true" autoDelete="false" doc:name="SFTP">
+        <reconnect-forever/>
+    </sftp:connector>
+    <objectstore:config name="ObjectStore__Connector" partition="pos-to-sap-export" objectStore-ref="_defaultUserObjectStore" persistent="true" doc:name="ObjectStore: Connector"/>
+    <validation:config name="Validation_Configuration" doc:name="Validation Configuration"/>
+ <flow name="pos-to-sap-export-TestFlow" >
+        <sftp:inbound-endpoint connector-ref="SFTP1" host="localhost" port="22" path="/sftp/S2_Export" user="local" password="local" responseTimeout="10000" doc:name="SFTP" tempDir="processing" pollingFrequency="30000">
+            <reconnect-forever/>
+        </sftp:inbound-endpoint>
+        <batch:execute name="pos-to-sap-export-testBatch" doc:name="pos-to-sap-exportBatch"/>
+    </flow>
+    <batch:job name="pos-to-sap-export-testBatch" max-failed-records="-1">
+        <batch:threading-profile maxThreadsActive="1" maxThreadsIdle="1" poolExhaustedAction="WAIT"/>
+        <batch:input>
+            <flow-ref name="initTicketsVar_Sub_Flow" doc:name="initTicketsVar_Sub_Flow"/>
+            <flow-ref name="loadHeaders_Sub_Flow" doc:name="loadHeaders_Sub_Flow"/>
+            <dw:transform-message doc:name="Get Tickets" metadata:id="e4ed0922-b606-49d9-b663-9bac384e2e80">
+                <dw:input-payload doc:sample="C:\Desarrollo\Clientes\AREAS\docs\pos-to-sap-export\S2_SLSEXP_20180601223216_20180601221500.csv" mimeType="application/csv">
+                    <dw:reader-property name="streaming" value="true"/>
+                    <dw:reader-property name="header" value="false"/>
+                </dw:input-payload>
+                <dw:input-variable doc:sample="C:\Desarrollo\Clientes\AREAS\workspace\pruebas\src\test\resources\sample_data\list_String.dwl" mimeType="application/java" variableName="H_HDR"/>
+                <dw:input-variable doc:sample="sample_data\list_String.dwl" mimeType="application/java" variableName="H_DTL"/>
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+ payload map getTickets(flowVars.tickets, flowVars.headers, $[0] splitBy "|") reduce ($$ ++ $)
+
+]]></dw:set-payload>
+            </dw:transform-message>
+            <flow-ref name="checkMandatoryHeaders_Sub_Flow" doc:name="checkMandatoryHeaders_Sub_Flow"/>
+
+            <flow-ref name="loadFieldValidations_Sub_Flow" doc:name="loadFieldValidations_Sub_Flow"/>
+
+            <flow-ref name="moveTicketsToPayload_Sub_Flow" doc:name="moveTicketsToPayload_Sub_Flow"/>
+
+
+
+        </batch:input>
+        <batch:process-records>
+            <batch:step name="Init_Step">
+                <dw:transform-message doc:name="Transform Ticket To Maps">
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	header: payload filter $[0] == "HDR" map getMap(flowVars.headers.H_HDR.value,$) reduce $,
+	details: payload filter $[0] == "DTL" map getMap(flowVars.headers.H_DTL.value,$),
+	discounts: payload filter $[0] == "DSC" map getMap(flowVars.headers.H_DSC.value,$),
+	tms: payload filter $[0] == "TM" map getMap(flowVars.headers.H_TM.value,$),
+	taxes: payload filter $[0] == "TAX" map getMap(flowVars.headers.H_TAX.value,$),
+	vocs: payload filter $[0] == "VOC" map getMap(flowVars.headers.H_VOC.value,$),
+	ars: payload filter $[0] == "AR" map getMap(flowVars.headers.H_AR.value,$)
+}]]></dw:set-payload>
+                </dw:transform-message>
+                <batch:set-record-variable variableName="payload" value="#[payload]" doc:name="Record Variable Payload"/>
+
+            </batch:step>
+            <batch:step name="Validate_Ticket_Step">
+                <flow-ref name="validateTicket_Sub_Flow" doc:name="validateTicket_Sub_Flow"/>
+
+            </batch:step>
+
+        </batch:process-records>
+        <batch:on-complete>
+            <logger message="FIN" level="INFO" doc:name="Logger"/>
+
+        </batch:on-complete>
+    </batch:job>
+    <sub-flow name="loadHeaders_Sub_Flow" doc:description="Load the headers definition from the properties file into flowVars.">
+        <dw:transform-message doc:name="Get Headers">
+            <dw:set-variable variableName="headers"><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	H_HDR: {
+		value: p('H_HDR.columns') splitBy "|",
+		found: false
+	},
+	H_DTL:{
+		value: p('H_DTL.columns') splitBy "|",
+		found: false
+	},
+	H_DSC: 	{
+		value: p('H_DSC.columns') splitBy "|",
+		found: false
+	},
+	H_TM:	{
+		value: p('H_TM.columns') splitBy "|",
+		found: false
+	},
+	H_TAX:	{
+		value: p('H_TAX.columns') splitBy "|",
+		found: false
+	},
+	H_VOC:	{
+		value: p('H_VOC.columns') splitBy "|",
+		found: false
+	},
+	H_AR:	{
+		value: p('H_AR.columns') splitBy "|",
+		found: false
+	}
+}]]></dw:set-variable>
+        </dw:transform-message>
+    </sub-flow>
+    <sub-flow name="loadFieldValidations_Sub_Flow">
+        <dw:transform-message doc:name="Load CheckList">
+            <dw:set-variable variableName="checkList"><![CDATA[%dw 1.0
+%output application/java
+---
+(p('CheckList') splitBy ",") map using (validation = p('$') splitBy ","){
+	 line: validation[0],
+	 field: validation[1],
+	 mandatory: validation[2],
+	 type: validation[3],
+	 minLength: validation[4],
+	 maxLength: validation[5],
+	 regex: validation[6],
+	 flows : [ // flow names to be executed for validations
+	 	"mandatory" when validation[2] != null and validation[2] != "" otherwise null,
+	 	// this is the validation to check the type
+	 	validation[3] when validation[3] != null and validation[3] != "" otherwise null,
+	 	"minlength" when validation[4] != null and validation[4] != "" otherwise null,
+	 	"maxlength" when validation[5] != null and validation[5] != "" otherwise null,
+	 	"regex" when validation[6] != null and validation[6] != "" otherwise null
+	 	] filter $ != null
+} when trim p('CheckList') != "" otherwise []]]></dw:set-variable>
+        </dw:transform-message>
+        <dw:transform-message doc:name="Load Validations By Line">
+            <dw:set-variable variableName="validations"><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	header: flowVars.checkList filter ($.line == "H_HDR"),
+	detail: flowVars.checkList filter ($.line == "H_DTL"),
+	discount: flowVars.checkList filter ($.line == "H_DSC"),
+	tm: flowVars.checkList filter ($.line == "H_TM"),
+	tax: flowVars.checkList filter ($.line == "H_TAX"),
+	voc: flowVars.checkList filter ($.line == "H_VOC"),
+	ar: flowVars.checkList filter ($.line == "H_AR")
+}]]></dw:set-variable>
+        </dw:transform-message>
+
+    </sub-flow>
+    <sub-flow name="initTicketsVar_Sub_Flow" doc:description="This flow creates a flo">
+        <set-variable variableName="tickets" value="#[new java.util.HashMap()]" doc:name="Create var tickets"/>
+
+    </sub-flow>
+    <sub-flow name="checkMandatoryHeaders_Sub_Flow">
+        <logger level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="moveTicketsToPayload_Sub_Flow">
+        <set-payload value="#[flowVars.tickets.values()]" doc:name="Set Payload"/>
+        <remove-variable variableName="tickets" doc:name="Remove var tickets"/>
+    </sub-flow>
+
+    <sub-flow name="validateTicket_Sub_Flow">
+        <flow-ref name="validate_header" doc:name="validate_header"/>
+        <flow-ref name="validate_detail_lines" doc:name="validate_detail_lines"/>
+        <flow-ref name="validate_discount_lines" doc:name="validate_discount_lines"/>
+        <flow-ref name="validate_tender_media_lines" doc:name="validate_tender_media_lines"/>
+        <flow-ref name="validate_tax_lines" doc:name="validate_tax_lines"/>
+        <flow-ref name="validate_voc_lines" doc:name="validate_voc_lines"/>
+        <flow-ref name="validate_ar_lines" doc:name="validate_ar_lines"/>
+
+    </sub-flow>
+    <sub-flow name="validate_header">
+        <set-variable variableName="ticketRow" value="#[recordVars.payload.header]" doc:name="Set header to ticketRow variable"/>
+        <foreach collection="#[flowVars.validations.header]" doc:name="For Each Header Field Validation">
+            <flow-ref name="validate_field" doc:name="validate_field"/>
+        </foreach>
+    </sub-flow>
+    <sub-flow name="validate_ar_lines">
+        <set-variable variableName="rows" value="#[recordVars.payload.ars]" doc:name="Set ars lines to rows variable"/>
+        <set-variable variableName="fieldValidations" value="#[flowVars.validations.ar]" doc:name="Set ar field validations to fieldValidations variable"/>
+        <flow-ref name="validate_ticket_rows" doc:name="validate_ticket_rows"/>
+    </sub-flow>
+    <sub-flow name="validate_voc_lines">
+        <set-variable variableName="rows" value="#[recordVars.payload.vocs]" doc:name="Set vocs lines to rows variable"/>
+        <set-variable variableName="fieldValidations" value="#[flowVars.validations.voc]" doc:name="Set voc field validations to fieldValidations variable"/>
+        <flow-ref name="validate_ticket_rows" doc:name="validate_ticket_rows"/>
+    </sub-flow>
+    <sub-flow name="validate_tax_lines">
+        <set-variable variableName="rows" value="#[recordVars.payload.taxes]" doc:name="Set tax lines to rows variable"/>
+        <set-variable variableName="fieldValidations" value="#[flowVars.validations.tax]" doc:name="Set tax field validations to fieldValidations variable"/>
+        <flow-ref name="validate_ticket_rows" doc:name="validate_ticket_rows"/>
+    </sub-flow>
+    <sub-flow name="validate_tender_media_lines">
+        <set-variable variableName="rows" value="#[recordVars.payload.tms]" doc:name="Set tm lines to rows variable"/>
+        <set-variable variableName="fieldValidations" value="#[flowVars.validations.tm]" doc:name="Set tm field validations to fieldValidations variable"/>
+        <flow-ref name="validate_ticket_rows" doc:name="validate_ticket_rows"/>
+    </sub-flow>
+    <sub-flow name="validate_discount_lines">
+        <set-variable variableName="rows" value="#[recordVars.payload.discounts]" doc:name="Set discount lines to rows variable"/>
+        <set-variable variableName="fieldValidations" value="#[flowVars.validations.discount]" doc:name="Set discount field validations to fieldValidations variable"/>
+        <flow-ref name="validate_ticket_rows" doc:name="validate_ticket_rows"/>
+    </sub-flow>
+    <sub-flow name="validate_detail_lines">
+        <set-variable variableName="rows" value="#[recordVars.payload.details]" doc:name="Set details lines to rows variable"/>
+        <set-variable variableName="fieldValidations" value="#[flowVars.validations.detail]" doc:name="Set detail field validations to fieldValidations variable"/>
+        <flow-ref name="validate_ticket_rows" doc:name="validate_ticket_rows"/>
+    </sub-flow>
+    <sub-flow name="validate_ticket_rows">
+        <foreach collection="#[ (flowVars.fieldValidations.size() &gt; 0)?flowVars.rows:[] ]" doc:name="For Each Row">
+            <set-variable variableName="ticketRow" value="#[payload]" doc:name="ticketRow"/>
+            <foreach collection="#[flowVars.fieldValidations]" doc:name="For Each Field Validation">
+                <flow-ref name="validate_field" doc:name="validate_field"/>
+            </foreach>
+        </foreach>
+    </sub-flow>
+    <sub-flow name="validate_field">
+        <set-variable variableName="fieldValue" value="#[ticketRow[payload.field]]" doc:name="fieldValue"/>
+        <set-variable variableName="flowIndex" value="#[0]" doc:name="flowIndex"/>
+        <set-variable variableName="validation" value="validate_#[payload.flows[flowVars.flowIndex]]" doc:name="validation"/>
+        <flow-ref name="#[flowVars.validation]" doc:name="Call Validation"/>
+    </sub-flow>
+    <sub-flow name="validate_mandatory">
+        <choice doc:name="Not Null?">
+            <when expression="#[validator.isNotNull(flowVars.fieldValue)]">
+                <flow-ref name="call_next_validation" doc:name="call next validation"/>
+
+            </when>
+            <otherwise>
+                <logger level="INFO" doc:name="Logger" message="TODO: #[payload.field] ES OBLIGATORIO."/>
+            </otherwise>
+        </choice>
+    </sub-flow>
+    <flow name="validate_int">
+        <validation:is-number value="#[flowVars.fieldValue]" numberType="INTEGER" doc:name="Validation"/>
+        <flow-ref name="call_next_validation" doc:name="call_next_validation"/>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <logger message="TODO: #[payload.field] NO ES UN INTEGER" level="INFO" doc:name="Logger"/>
+        </catch-exception-strategy>
+
+
+    </flow>
+    <flow name="validate_date">
+        <validation:is-time config-ref="Validation_Configuration" time="#[flowVars.fieldValue]" pattern="${date.format}" doc:name="Validation"/>
+        <flow-ref name="call_next_validation" doc:name="call_next_validation"/>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <logger message="TODO: #[payload.field] NO ES UNA FECHA VALIDA" level="INFO" doc:name="Logger"/>
+        </catch-exception-strategy>
+    </flow>
+    <flow name="validate_regex">
+        <validation:matches-regex value="#[flowVars.fieldValue]" regex="#[payload.regex]" doc:name="Validation"/>
+        <flow-ref name="call_next_validation" doc:name="call_next_validation"/>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <logger message="TODO: #[payload.field] NO CUMPLE LA EXPRESION REGULAR '#[payload.regex]'." level="INFO" doc:name="Logger"/>
+        </catch-exception-strategy>
+    </flow>
+    <sub-flow name="validate_char">
+        <logger message="VALIDAR CHAR" level="INFO" doc:name="Logger"/>
+        <flow-ref name="call_next_validation" doc:name="call_next_validation"/>
+    </sub-flow>
+
+    <sub-flow name="call_next_validation">
+        <set-variable variableName="flowIndex" value="#[flowVars.flowIndex + 1]" doc:name="flowIndex"/>
+        <choice doc:name="more validations?">
+            <when expression="#[flowVars.flowIndex &lt; payload.flows.size() ]">
+                <set-variable variableName="validation" value="validate_#[payload.flows[flowVars.flowIndex]]" doc:name="validation"/>
+                <flow-ref name="#[flowVars.validation]" doc:name="call next validation"/>
+            </when>
+            <otherwise>
+                <logger message="VALIDATION END OF #[payload.field]" level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+
+    </sub-flow>
+</mule>

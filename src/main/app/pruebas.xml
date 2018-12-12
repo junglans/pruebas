@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ftp="http://www.mulesoft.org/schema/mule/ee/ftp" xmlns:mulerequester="http://www.mulesoft.org/schema/mule/mulerequester"
-	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
-	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
-	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:context="http://www.springframework.org/schema/context" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans" 
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<mule xmlns:ldap="http://www.mulesoft.org/schema/mule/ldap"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ftp="http://www.mulesoft.org/schema/mule/ee/ftp"
+	xmlns:mulerequester="http://www.mulesoft.org/schema/mule/mulerequester"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/mulerequester http://www.mulesoft.org/schema/mule/mulerequester/current/mule-mulerequester.xsd
 http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
 http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
@@ -18,26 +23,62 @@ http://www.springframework.org/schema/context http://www.springframework.org/sch
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
 http://www.mulesoft.org/schema/mule/ee/ftp http://www.mulesoft.org/schema/mule/ee/ftp/current/mule-ftp-ee.xsd
-http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
-    
-    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="9000" doc:name="HTTP Listener Configuration"/>
-    <db:generic-config name="MSSQL" url="jdbc:sqlserver://${MSSQL.SERVER}:${MSSQL.PORT};databaseName=${MSSQL.DATABASE};user=${MSSQL.USERNAME};password=${MSSQL.PASSWORD}" driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver" doc:name="Generic Database Configuration"/>
-    <context:property-placeholder location="pruebas.properties"/>
-    <file:connector name="File" autoDelete="true" streaming="true" validateConnections="true" doc:name="File"/>
-    <ftp:connector name="FTP" binary="false" connectionTimeout="30000" pollingFrequency="1000" streaming="true" validateConnections="true" moveToDirectory="/FacturasFI/tmp" doc:name="FTP">
-    </ftp:connector>
-    <flow name="pruebasFlow2" initialState="stopped">
-        <poll doc:name="Poll">
-            <fixed-frequency-scheduler frequency="1000000"/>
-            <logger level="INFO" doc:name="Logger"/>
-        </poll>
-        <batch:execute name="pruebasBatch" doc:name="Batch Execute"/>
-    </flow>
-    <batch:job name="pruebasBatch">
-        <batch:input>
-            <flow-ref name="loadFieldValidations_Sub_Flow" doc:name="loadFieldValidations_Sub_Flow"/>
-            <scripting:component doc:name="Groovy">
-                <scripting:script engine="Groovy"><![CDATA[payload = new java.util.ArrayList();
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ldap http://www.mulesoft.org/schema/mule/ldap/current/mule-ldap.xsd">
+	<ldap:config name="LDAP__Configuration_France" authDn="${ldap.authDn.fr}"
+		authPassword="${ldap.authPassword.fr}" authentication="simple" url="${ldap.url.fr}"
+		initialPoolSize="${ldap.pool.initsize.fr:3}" maxPoolSize="${ldap.pool.maxsize.fr:5}"
+		poolTimeout="${ldap.connect.pool.timeout.fr:60000}" referral="${ldap.referral:FOLLOW}"
+		doc:name="LDAP: Configuration">
+		<reconnect frequency="${ldap.reconnectFrequency:2000}"
+			count="${ldap.reconnectAttempts:2}" />
+	</ldap:config>
+	<http:listener-config name="HTTP_Listener_Configuration"
+		host="0.0.0.0" port="9000" doc:name="HTTP Listener Configuration" />
+	<db:generic-config name="MSSQL"
+		url="jdbc:sqlserver://${MSSQL.SERVER}:${MSSQL.PORT};databaseName=${MSSQL.DATABASE};user=${MSSQL.USERNAME};password=${MSSQL.PASSWORD}"
+		driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+		doc:name="Generic Database Configuration" />
+	<context:property-placeholder location="pruebas.properties" />
+	<file:connector name="File" autoDelete="true" streaming="true"
+		validateConnections="true" doc:name="File" />
+	<ftp:connector name="FTP" binary="false"
+		connectionTimeout="30000" pollingFrequency="1000" streaming="true"
+		validateConnections="true" moveToDirectory="/FacturasFI/tmp" doc:name="FTP">
+	</ftp:connector>
+	<ldap:config name="LDAP__Configuration" authDn="esbcaaro@areas2.com"
+		authPassword="4Hw53w6g" url="ldap://192.168.62.35:389/" doc:name="LDAP: Configuration" />
+	<ldap:config name="LDAP__Configuration1" authDn="SVC-MAMLDAP@elior.net"
+		authPassword="mam@ldap#areas01*$" authentication="simple"
+		url="ldap://10.72.248.4:389" referral="FOLLOW" doc:name="LDAP: Configuration"
+		poolTimeout="600000" />
+	<flow name="pruebasFlow4">
+		<http:listener config-ref="HTTP_Listener_Configuration"
+			path="/ldap" doc:name="HTTP" />
+        <set-variable variableName="userName" value="#['mambo1']" doc:name="userName"/>
+        <logger message="#[java.text.MessageFormat.format(&quot;${ldap.userSearchFilter.fr}&quot;,  flowVars.username)]" level="INFO" doc:name="Logger"/>
+        
+		<dw:transform-message doc:name="Transform Message">
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+		</dw:transform-message>
+		<!-- <ldap:search-one config-ref="LDAP__Configuration" baseDn="OU=PROVEIDORS,DC=areas2,DC=com" 
+			filter="(sAMAccountName=testbasetis_s4)" scope="SUB_TREE" doc:name="LDAP"/> -->
+	</flow>
+	<flow name="pruebasFlow2" initialState="stopped">
+		<poll doc:name="Poll">
+			<fixed-frequency-scheduler frequency="1000000" />
+			<logger level="INFO" doc:name="Logger" />
+		</poll>
+		<batch:execute name="pruebasBatch" doc:name="pruebasBatch" />
+	</flow>
+	<batch:job name="pruebasBatch">
+		<batch:input>
+			<flow-ref name="loadFieldValidations_Sub_Flow" doc:name="loadFieldValidations_Sub_Flow" />
+			<scripting:component doc:name="Groovy">
+				<scripting:script engine="Groovy"><![CDATA[payload = new java.util.ArrayList();
 java.util.Map header = new java.util.HashMap();
 java.util.Map values = new java.util.HashMap();
 values.put("OpenPeriodId","aZZZ_6786");
@@ -45,20 +86,23 @@ values.put("ClosePeriodId","30");
 header.put("header", values)
 payload.add(header);
 return payload;]]></scripting:script>
-            </scripting:component>
-        </batch:input>
-        <batch:process-records>
-            <batch:step name="Batch_Step">
-                <batch:set-record-variable variableName="payload" value="#[payload]" doc:name="Record Variable"/>
-                <flow-ref name="validateTicket_Sub_Flow" doc:name="validateTicket_Sub_Flow"/>
-            </batch:step>
-        </batch:process-records>
-    </batch:job>
-    <flow name="pruebasFlow" initialState="stopped">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/test" allowedMethods="GET" doc:name="HTTP"/>
-        <dw:transform-message doc:name="Transform Message" metadata:id="8162e369-6a3b-4a33-bf7c-00796bd8bdb3">
-            <dw:input-payload doc:sample="sample_data\empty.xml"/>
-            <dw:set-payload><![CDATA[%dw 1.0
+			</scripting:component>
+		</batch:input>
+		<batch:process-records>
+			<batch:step name="Batch_Step">
+				<batch:set-record-variable variableName="payload"
+					value="#[payload]" doc:name="Record Variable" />
+				<flow-ref name="validateTicket_Sub_Flow" doc:name="validateTicket_Sub_Flow" />
+			</batch:step>
+		</batch:process-records>
+	</batch:job>
+	<flow name="pruebasFlow" initialState="stopped">
+		<http:listener config-ref="HTTP_Listener_Configuration"
+			path="/test" allowedMethods="GET" doc:name="HTTP" />
+		<dw:transform-message doc:name="Transform Message"
+			metadata:id="8162e369-6a3b-4a33-bf7c-00796bd8bdb3">
+			<dw:input-payload doc:sample="sample_data\empty.xml" />
+			<dw:set-payload><![CDATA[%dw 1.0
 %output application/xml
 %var test = payload.ZINVOIC02.IDOC.*E1EDK14 filter ($.QUALF == '015') map ({
 	value: $.ORGID
@@ -87,14 +131,18 @@ return payload;]]></scripting:script>
    ))
  }
 }]]></dw:set-payload>
-        </dw:transform-message>
-        <set-variable variableName="separator" value="#['&amp;']" doc:name="separator"/>
-        <set-variable variableName="columns" value="#[new java.util.ArrayList(java.util.Arrays.asList({&quot;COUNTRY&quot;,&quot;CUSTOMER&quot;,&quot;TAX_NUMBER&quot;,&quot;CITY&quot;,&quot;DESCRIPTION&quot;,&quot;STREET&quot;}))]" doc:name="columns"/>
-        <db:select config-ref="MSSQL" doc:name="Select DU_Customer">
-            <db:parameterized-query><![CDATA[SELECT * FROM DU_CUSTOMER]]></db:parameterized-query>
-        </db:select>
-        <dw:transform-message doc:name="Transform Message" metadata:id="7aec4e2f-ac28-4308-9700-f02d3daf15b1">
-            <dw:set-payload><![CDATA[%dw 1.0
+		</dw:transform-message>
+		<set-variable variableName="separator" value="#['&amp;']"
+			doc:name="separator" />
+		<set-variable variableName="columns"
+			value="#[new java.util.ArrayList(java.util.Arrays.asList({&quot;COUNTRY&quot;,&quot;CUSTOMER&quot;,&quot;TAX_NUMBER&quot;,&quot;CITY&quot;,&quot;DESCRIPTION&quot;,&quot;STREET&quot;}))]"
+			doc:name="columns" />
+		<db:select config-ref="MSSQL" doc:name="Select DU_Customer">
+			<db:parameterized-query><![CDATA[SELECT * FROM DU_CUSTOMER]]></db:parameterized-query>
+		</db:select>
+		<dw:transform-message doc:name="Transform Message"
+			metadata:id="7aec4e2f-ac28-4308-9700-f02d3daf15b1">
+			<dw:set-payload><![CDATA[%dw 1.0
 %output application/csv header=false
 ---
 payload map ((row, ind) -> {
@@ -106,49 +154,71 @@ payload map ((row, ind) -> {
 ).*line[0] map (
 	line:$
 )]]></dw:set-payload>
-        </dw:transform-message>
-        <file:outbound-endpoint path="C:\tmp" outputPattern="borrar.csv" connector-ref="File" responseTimeout="10000" doc:name="File"/>
-        <set-payload value="#['OK']" doc:name="Set Payload"/>
-    </flow>
-    <flow name="pruebasFlow1" initialState="stopped">
-        <poll doc:name="Poll">
-            <fixed-frequency-scheduler frequency="60000" startDelay="5000"/>
-            <component  doc:name="Java">
-                <singleton-object class="com.pruebas.ftp.FtpClientConnector">
-                    <property key="host" value="localhost"/>
-                    <property key="port" value="21"/>
-                    <property key="user" value="local"/>
-                    <property key="password" value="local"/>
-                    <property key="path" value="/FacturasFI/Inbox"/>
-                </singleton-object>
-            </component>
-        </poll>
-        <foreach collection="#[message.payload]" doc:name="For Each fileName">
-            <logger message="#[message.payload]" level="INFO" doc:name="Logger"/>
-                        <scripting:component doc:name="FTP">
-                <scripting:script engine="Groovy"><![CDATA[// def ftpFileUri = "ftp://local:local@localhost:21/FacturasFI/Inbox?connector=FTP&fileNameFilter=" + message.payload 
+		</dw:transform-message>
+		<file:outbound-endpoint path="C:\tmp"
+			outputPattern="borrar.csv" connector-ref="File" responseTimeout="10000"
+			doc:name="File" />
+		<set-payload value="#['OK']" doc:name="Set Payload" />
+	</flow>
+	<flow name="pruebasFlow1" initialState="stopped">
+		<poll doc:name="Poll">
+			<fixed-frequency-scheduler frequency="60000"
+				startDelay="5000" />
+			<component doc:name="Java">
+				<singleton-object class="com.pruebas.ftp.FtpClientConnector">
+					<property key="host" value="localhost" />
+					<property key="port" value="21" />
+					<property key="user" value="local" />
+					<property key="password" value="local" />
+					<property key="path" value="/FacturasFI/Inbox" />
+				</singleton-object>
+			</component>
+		</poll>
+		<foreach collection="#[message.payload]" doc:name="For Each fileName">
+			<logger message="#[message.payload]" level="INFO" doc:name="Logger" />
+			<scripting:component doc:name="FTP">
+				<scripting:script engine="Groovy"><![CDATA[// def ftpFileUri = "ftp://local:local@localhost:21/FacturasFI/Inbox?connector=FTP&fileNameFilter=" + message.payload 
 // muleContext.client.request(ftpFileUri, 30000L);]]></scripting:script>
-            </scripting:component>
-            <sftp:outbound-endpoint exchange-pattern="request-response" outputPattern="#[message.inboundProperties.originalFilename]" host="192.168.16.97" port="22" path="/pruebas" user="local" password="local" responseTimeout="10000" doc:name="SFTP" connector-ref="SFTP"/>
-        </foreach>
-    </flow>
-    <flow name="mandaLogsStart">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/start" allowedMethods="POST" doc:name="HTTP"/>
+			</scripting:component>
+			<sftp:outbound-endpoint exchange-pattern="request-response"
+				outputPattern="#[message.inboundProperties.originalFilename]" host="192.168.16.97"
+				port="22" path="/pruebas" user="local" password="local"
+				responseTimeout="10000" doc:name="SFTP" connector-ref="SFTP" />
+		</foreach>
+	</flow>
+	<flow name="mandaLogsStart">
+		<http:listener config-ref="HTTP_Listener_Configuration"
+			path="/start" allowedMethods="POST" doc:name="HTTP" />
 
-        <logger level="INFO" doc:name="Logger" message="payload: #[message.payloadAs(java.lang.String)]" category="com.areas.batch.start"/>
-        <set-variable variableName="fileName" value="#[message.payload]" doc:name="fileName"/>
-        <flow-ref name="getCountryFromFileName" doc:name="getCountryFromFileName"/>
-        <set-payload value="#[flowVars.countryInfo]" doc:name="Set Payload"/>
-        <!-- logger message="#[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger" category="com.areas.batch.start"/-->
-    </flow>
-    <flow name="mandaLogsEnd">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/end" allowedMethods="POST" doc:name="HTTP"/>
-        <flow-ref name="pruebasFlow3" doc:name="Flow Reference"/>
-        <logger message="#[message.payloadAs(java.lang.String)]" level="INFO" category="com.areas.batch.end" doc:name="Logger"/>
-    </flow>
-    <flow name="pruebasFlow3">
-        <dw:transform-message doc:name="Transform Message">
-            <dw:set-payload><![CDATA[%dw 1.0
+		<logger level="INFO" doc:name="Logger"
+			message="payload: #[message.payloadAs(java.lang.String)]" category="com.areas.batch.start" />
+		<set-variable variableName="fileName" value="#[message.payload]"
+			doc:name="fileName" />
+		<flow-ref name="getCountryFromFileName" doc:name="getCountryFromFileName" />
+		<set-payload value="#[flowVars.countryInfo]" doc:name="Set Payload" />
+		<!-- logger message="#[message.payloadAs(java.lang.String)]" level="INFO" 
+			doc:name="Logger" category="com.areas.batch.start"/ -->
+	</flow>
+	<flow name="mandaLogsEnd">
+		<http:listener config-ref="HTTP_Listener_Configuration"
+			path="/end" allowedMethods="POST" doc:name="HTTP" />
+		<flow-ref name="pruebasFlow3" doc:name="pruebasFlow3" />
+		<logger message="#[message.payloadAs(java.lang.String)]" level="INFO"
+			category="com.areas.batch.end" doc:name="Logger" />
+	</flow>
+	<flow name="pruebasFlow3">
+		<set-variable variableName="num" value="#[12.344]"
+			doc:name="num" />
+		<dw:transform-message doc:name="Transform Message">
+			<dw:input-variable doc:sample="sample_data\double.dwl"
+				variableName="num" />
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+flowVars.num as :string {format: "0.00"}]]></dw:set-payload>
+		</dw:transform-message>
+		<dw:transform-message doc:name="Transform Message">
+			<dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 (p('tp.prefix.list') splitBy ";") map using (protocol = p('$.protocol'), id=$) {
@@ -165,23 +235,26 @@ payload map ((row, ind) -> {
 		)
 	}  
 } as :object {class: "com.pruebas.ftp.ThirdPartyInfo"}]]></dw:set-payload>
-        </dw:transform-message>
-    </flow>
+		</dw:transform-message>
+	</flow>
 
-    <flow name="mandaErrEnd">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/err" allowedMethods="get" doc:name="HTTP"/>
-        <set-session-variable variableName="variable" value="#[&quot;Esto es una variable de sesi&#243;n&quot;]" doc:name="Session Variable"/>
-        <dw:transform-message doc:name="Transform Message">
-            <dw:set-payload><![CDATA[%dw 1.0
+	<flow name="mandaErrEnd">
+		<http:listener config-ref="HTTP_Listener_Configuration"
+			path="/err" allowedMethods="get" doc:name="HTTP" />
+		<set-session-variable variableName="variable"
+			value="#[&quot;Esto es una variable de sesi&#243;n&quot;]" doc:name="Session Variable" />
+		<dw:transform-message doc:name="Transform Message">
+			<dw:set-payload><![CDATA[%dw 1.0
 %output application/json
 ---
 {
 	val: lookup("pruebasSub_Flow", null)
 }]]></dw:set-payload>
-        </dw:transform-message>
-        <logger message="CCCCCCCCCCC: #[sessionVars.variable]" level="INFO" doc:name="Copy_of_Logger"/>
+		</dw:transform-message>
+		<logger message="CCCCCCCCCCC: #[sessionVars.variable]" level="INFO"
+			doc:name="Copy_of_Logger" />
 
-    </flow>
+	</flow>
 
- 
+	
 </mule>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <flow name="email_dynamicFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/email" doc:name="HTTP"/>
+        <logger level="INFO" doc:name="Logger"/>
+        <db:select config-ref="HANA" doc:name="Database">
+            <db:parameterized-query><![CDATA[SELECT SOURCEPOSSYSTEM, BUSINESSUNIT_POS, REVCENTER_POS, BUSINESSDATE, CMSESSIONNUMBER, CMSNLINE, TDATETIME, STATUS, "TIMESTAMP", CHKBUSINESSDATE, WORKSTATION, CHECKWSNUMBER, CHECKNUMBER, OPENDAYPERIOD, TEMPLOYEE, RECEPTACLETYPE, RECEPTACLENUMBER, RECEPTACLENAME, CMTTYPE, CM_CUKY, CASHFUNDAMOUNT, TAMOUNT, OVERSHORTAMOUNT, CBALANCEAMOUNT, TIPAMOUNT, CMTREFERENCE, TARGETPOSREF, CMITEMNUMBER, CMITEMNAME, TMEDIANUMBER_POS, TENDERMEDIANAME, POSCHECKID, SOURCEERPSYSTEM, BUSINESSUNIT_ERP, BUSINESSUNIT_SAP, REVCENTER_ERP, RETAILSTORE_SAP, TMEDIANUMBER_ERP, TMEDIANUMBER_SAP, CMITEMNUMBER_ERP, CMITEMNUMBER_SAP, RECORDID, IDCMSESSION, IDFILE
+FROM ZMULE."/BIC/OHA_POSCSHM";
+WHERE IDFILE != '']]></db:parameterized-query>
+        </db:select>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+</mule>

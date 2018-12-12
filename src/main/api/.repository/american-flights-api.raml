@@ -1,0 +1,18 @@
+#%RAML 1.0
+baseUri: https://mocksvc.mulesoft.com/mocks/29f8d2a8-66a7-4008-bcba-c83db85642b2 # 
+title: American Flights API
+
+/flights:
+  get:
+    queryParameters: 
+      destination:
+        required: false
+        enum: 
+          - SFO
+          - LAX
+          - CLE
+  post:
+    
+  /{ID}:
+    get:
+    

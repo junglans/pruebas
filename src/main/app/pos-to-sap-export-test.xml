@@ -16,13 +16,13 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
 http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
     <sftp:connector name="SFTP1" validateConnections="true" duplicateHandling="overwrite" keepFileOnError="true" autoDelete="false" doc:name="SFTP">
-        <reconnect-forever/>
+       
     </sftp:connector>
     <objectstore:config name="ObjectStore__Connector" partition="pos-to-sap-export" objectStore-ref="_defaultUserObjectStore" persistent="true" doc:name="ObjectStore: Connector"/>
     <validation:config name="Validation_Configuration" doc:name="Validation Configuration"/>
- <flow name="pos-to-sap-export-TestFlow" >
+ <flow name="pos-to-sap-export-TestFlow" initialState="stopped">
         <sftp:inbound-endpoint connector-ref="SFTP1" host="localhost" port="22" path="/sftp/S2_Export" user="local" password="local" responseTimeout="10000" doc:name="SFTP" tempDir="processing" pollingFrequency="30000">
-            <reconnect-forever/>
+           
         </sftp:inbound-endpoint>
         <batch:execute name="pos-to-sap-export-testBatch" doc:name="pos-to-sap-exportBatch"/>
     </flow>

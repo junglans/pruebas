@@ -1,0 +1,11 @@
+{
+        "active": "TRUE",
+        "country": "ES",
+        "language": "ES",
+        "fullName": "testbasetis_s4 ServiceAccount ",
+        "loginType": null,
+        "backEnd": "SAP S4",
+        "backEndCode": 2,
+        "sapUserId": "testbasetis_s4",
+        "pwdExpirationTime": "60"
+}

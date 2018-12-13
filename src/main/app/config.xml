@@ -20,7 +20,7 @@ http://www.mulesoft.org/schema/mule/secure-property-placeholder http://www.mules
     <sftp:connector name="SFTP" validateConnections="true" doc:name="SFTP" duplicateHandling="overwrite" preferredAuthenticationMethods="publickey,password,keyboard-interactive" keepFileOnError="true"   autoDelete="false" tempDirInbound="processing">
 
     </sftp:connector>
-
+  <smtp:gmail-connector name="Gmail" contentType="text/html" validateConnections="true" doc:name="Gmail"/>
    <db:generic-config name="HANA" url="jdbc:sap://${SAPHANA.HOST}/?currentschema=${SAPHANA.SCHEMA}&amp;user=${SAPHANA.USERNAME}&amp;password=${SAPHANA.PASSWORD}" driverClassName="com.sap.db.jdbc.Driver" doc:name="Generic Database Configuration">
         <db:pooling-profile    />
     </db:generic-config>

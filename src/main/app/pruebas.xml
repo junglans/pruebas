@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ldap="http://www.mulesoft.org/schema/mule/ldap"
+<mule xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:ldap="http://www.mulesoft.org/schema/mule/ldap"
 	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ftp="http://www.mulesoft.org/schema/mule/ee/ftp"
 	xmlns:mulerequester="http://www.mulesoft.org/schema/mule/mulerequester"
 	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
@@ -24,7 +24,8 @@ http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/fil
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
 http://www.mulesoft.org/schema/mule/ee/ftp http://www.mulesoft.org/schema/mule/ee/ftp/current/mule-ftp-ee.xsd
 http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
-http://www.mulesoft.org/schema/mule/ldap http://www.mulesoft.org/schema/mule/ldap/current/mule-ldap.xsd">
+http://www.mulesoft.org/schema/mule/ldap http://www.mulesoft.org/schema/mule/ldap/current/mule-ldap.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd">
 	<ldap:config name="LDAP__Configuration_France" authDn="${ldap.authDn.fr}"
 		authPassword="${ldap.authPassword.fr}" authentication="simple" url="${ldap.url.fr}"
 		initialPoolSize="${ldap.pool.initsize.fr:3}" maxPoolSize="${ldap.pool.maxsize.fr:5}"
@@ -52,6 +53,41 @@ http://www.mulesoft.org/schema/mule/ldap http://www.mulesoft.org/schema/mule/lda
 		authPassword="mam@ldap#areas01*$" authentication="simple"
 		url="ldap://10.72.248.4:389" referral="FOLLOW" doc:name="LDAP: Configuration"
 		poolTimeout="600000" />
+    <flow name="startFlow">
+         <poll doc:name="Poll">
+         <schedulers:cron-scheduler expression="0 32 13 ? * * *"/>
+         <expression-component doc:name="START SFTP FLOW"><![CDATA[if(app.registry.pruebasFlow5.isStopped()){
+			app.registry.put("processes", new java.util.HashMap());
+            app.registry.pruebasFlow5.start();
+}]]></expression-component>
+     </poll>
+     <logger message="Poll Logging: #[payload]" level="INFO"
+         doc:name="Logger" />
+    </flow>
+    <flow name="stopFlow">
+        <poll doc:name="Poll">
+            <schedulers:cron-scheduler expression="0 34 13 ? * * *"/>
+            <expression-component doc:name="STOP SFTP FLOW"><![CDATA[if(!app.registry.pruebasFlow5.isStopped()){
+	java.util.Map files = app.registry.get("processes");
+	if (files== null  ||  files.isEmpty()) {
+		app.registry.pruebasFlow5.stop();
+	}
+}]]></expression-component>
+        </poll>
+        <expression-component doc:name="Expression"><![CDATA[flowVars.processes = app.registry.get("processes");]]></expression-component>
+        <logger level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="pruebasFlow5" initialState="stopped">
+        <sftp:inbound-endpoint host="localhost" port="22" responseTimeout="10000" doc:name="SFTP" archiveDir="/tmp/test" connector-ref="SFTP" password="local" path="/ThirdParty1/ERROR" user="local"/>
+        <set-variable variableName="UUID" value="#[function:uuid]" doc:name="UUID"/>
+        <expression-component doc:name="Expression"><![CDATA[app.registry.get("processes").put(flowVars.UUID, flowVars.UUID);]]></expression-component>
+        <scripting:component doc:name="Groovy">
+            <scripting:script engine="Groovy"><![CDATA[sleep(1*60*1000);]]></scripting:script>
+        </scripting:component>
+        <logger message="#[message.inboundProperties.originalFilename]" level="INFO" doc:name="Logger"/>
+        <expression-component doc:name="Expression"><![CDATA[app.registry.get("processes").remove(flowVars.UUID);]]></expression-component>
+
+    </flow>
 	<flow name="pruebasFlow4">
 		<http:listener config-ref="HTTP_Listener_Configuration"
 			path="/ldap" doc:name="HTTP" />

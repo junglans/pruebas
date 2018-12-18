@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
@@ -9,52 +9,62 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
-http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
-    <flow name="email_dynamicFlow" doc:description="El conector http recibe un JSON con un mapeo entre los columnas  de la SELECT y las cabeceras del csv que se manda por correo.">
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="email_dynamicFlow" doc:description="El conector http recibe un JSON con un mapeo entre los columnas  de la SELECT y las cabeceras del csv que se manda por correo. Por ejemplo: {&quot;CHKBUSINESSDATE&quot;:&quot;date&quot;, &quot;IDFILE&quot;:&quot;file&quot;}">
         <http:listener config-ref="HTTP_Listener_Configuration" path="/email" doc:name="HTTP"/>
         <logger level="INFO" doc:name="Logger"/>
+        <set-variable variableName="url" value="#['jdbc:sap://${SAPHANA.HOST}/?currentschema=${SAPHANA.SCHEMA}&amp;user=${SAPHANA.USERNAME}&amp;password=${SAPHANA.PASSWORD}']" doc:name="url"/>
         <dw:transform-message doc:name="Create Mapping var">
             <dw:set-variable variableName="mapping"><![CDATA[%dw 1.0
 %output application/java
 ---
 payload]]></dw:set-variable>
         </dw:transform-message>
-        <db:select config-ref="HANA" doc:name="Database">
-            <db:parameterized-query><![CDATA[SELECT CHKBUSINESSDATE, IDFILE
+        <db:select config-ref="HANA" doc:name="Database SELECT">
+            <db:parameterized-query><![CDATA[SELECT SOURCEPOSSYSTEM,CHKBUSINESSDATE, IDFILE
 FROM ZMULE."/BIC/OHA_POSCSHM"
 WHERE IDFILE != '']]></db:parameterized-query>
         </db:select>
-        <dw:transform-message doc:name="Transform Message">
-            <dw:input-payload doc:sample="sample_data\list_map_1.dwl"/>
+        <dw:transform-message doc:name="Replace names using mapping">
+        	
+            <dw:input-payload doc:sample="sample_data\list_map_1.dwl">
+            	
+            </dw:input-payload>
+            
             <dw:input-variable doc:sample="sample_data\string_1.dwl" variableName="mapping"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
 ---
-(payload map ((item, index) -> {
-	record: flowVars.mapping mapObject using(key=$$, value=$) {
+payload map using (item = $) 
+(
+	flowVars.mapping mapObject  using(key=$$, value=$) {
 		(value): item[key]
 	}
-})).record
-]]></dw:set-payload>
+)]]></dw:set-payload>
         </dw:transform-message>
-        <dw:transform-message doc:name="Transform Message">
+        <dw:transform-message doc:name="Generate CSV">
+        	<dw:input-payload >
+            	 
+            </dw:input-payload>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/csv header=true, separator="|", quote="\""
 ---
 payload]]></dw:set-payload>
 </dw:transform-message>
         <async doc:name="Async">
-            <message-properties-transformer scope="invocation" doc:name="Message Properties">
-                <add-message-property key="email_host" value="${email.smtp.host}"/>
-                <add-message-property key="email_port" value="${email.smtp.port}"/>
-            </message-properties-transformer>
-            <file:file-to-string-transformer mimeType="application/csv" doc:name="File to String"/>
-            <set-attachment attachmentName="cash_management.csv" value="#[payload]" contentType="application/csv" doc:name="Attachment"/>
-            <parse-template location="mail.html" doc:name="Email Body"/>
-            <smtp:outbound-endpoint host="#[flowVars.email_host]" port="#[flowVars.email_port]" user="${email.smtp.user}" password="${email.smtp.password}" connector-ref="Gmail" to="${email.smtp.to}" from="${email.smtp.from}" subject="${email.smtp.subject}" responseTimeout="10000" encoding="UTF-8" doc:name="SMTP"/>
+            <flow-ref name="send_email" doc:name="send_email"/>
         </async>
-        <set-payload value="#[{
-	&quot;message&quot;: &quot;OK&quot;
-}]" encoding="UTF-8" mimeType="application/json" doc:name="Set Payload"/>
+        <set-payload value="{  &quot;message&quot;: &quot;OK&quot; }" encoding="UTF-8" mimeType="application/json" doc:name="Set Payload OK"/>
     </flow>
+    <sub-flow name="send_email">
+        <message-properties-transformer scope="invocation" doc:name="Message Properties">
+            <add-message-property key="email_host" value="${email.smtp.host}"/>
+            <add-message-property key="email_port" value="${email.smtp.port}"/>
+        </message-properties-transformer>
+        <file:file-to-string-transformer mimeType="application/csv" doc:name="File to String"/>
+        <set-attachment attachmentName="cash_management.csv" value="#[payload]" contentType="application/csv" doc:name="Attachment"/>
+        <parse-template location="mail.html" doc:name="Email Body"/>
+        <smtp:outbound-endpoint host="#[flowVars.email_host]" port="#[flowVars.email_port]" user="${email.smtp.user}" password="${email.smtp.password}" connector-ref="Gmail" to="${email.smtp.to}" from="${email.smtp.from}" subject="${email.smtp.subject}" responseTimeout="10000" encoding="UTF-8" doc:name="SMTP"/>
+    </sub-flow>
 </mule>

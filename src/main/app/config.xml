@@ -21,8 +21,8 @@ http://www.mulesoft.org/schema/mule/secure-property-placeholder http://www.mules
 
     </sftp:connector>
   <smtp:gmail-connector name="Gmail" contentType="text/html" validateConnections="true" doc:name="Gmail"/>
-   <db:generic-config name="HANA" url="jdbc:sap://${SAPHANA.HOST}/?currentschema=${SAPHANA.SCHEMA}&amp;user=${SAPHANA.USERNAME}&amp;password=${SAPHANA.PASSWORD}" driverClassName="com.sap.db.jdbc.Driver" doc:name="Generic Database Configuration">
-        <db:pooling-profile    />
+   <db:generic-config name="HANA" url="#[flowVars.url]" driverClassName="com.sap.db.jdbc.Driver" doc:name="Generic Database Configuration">
+        <db:pooling-profile acquireIncrement="1" maxPoolSize="5" minPoolSize="2"/>
     </db:generic-config>
 	<configuration doc:name="Configuration">
        <expression-language>

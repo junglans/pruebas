@@ -55,7 +55,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 		poolTimeout="600000" />
     <flow name="startFlow">
          <poll doc:name="Poll">
-         <schedulers:cron-scheduler expression="0 32 13 ? * * *"/>
+         <schedulers:cron-scheduler expression="0 0 15 ? * * *"/>
          <expression-component doc:name="START SFTP FLOW"><![CDATA[if(app.registry.pruebasFlow5.isStopped()){
 			app.registry.put("processes", new java.util.HashMap());
             app.registry.pruebasFlow5.start();
@@ -66,7 +66,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
     </flow>
     <flow name="stopFlow">
         <poll doc:name="Poll">
-            <schedulers:cron-scheduler expression="0 34 13 ? * * *"/>
+            <schedulers:cron-scheduler expression="0 0/2 16-17 ? * * *"/>
             <expression-component doc:name="STOP SFTP FLOW"><![CDATA[if(!app.registry.pruebasFlow5.isStopped()){
 	java.util.Map files = app.registry.get("processes");
 	if (files== null  ||  files.isEmpty()) {
@@ -82,7 +82,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
         <set-variable variableName="UUID" value="#[function:uuid]" doc:name="UUID"/>
         <expression-component doc:name="Expression"><![CDATA[app.registry.get("processes").put(flowVars.UUID, flowVars.UUID);]]></expression-component>
         <scripting:component doc:name="Groovy">
-            <scripting:script engine="Groovy"><![CDATA[sleep(1*60*1000);]]></scripting:script>
+            <scripting:script engine="Groovy"><![CDATA[sleep(10*60*1000);]]></scripting:script>
         </scripting:component>
         <logger message="#[message.inboundProperties.originalFilename]" level="INFO" doc:name="Logger"/>
         <expression-component doc:name="Expression"><![CDATA[app.registry.get("processes").remove(flowVars.UUID);]]></expression-component>
